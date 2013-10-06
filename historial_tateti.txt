@@ -1,0 +1,3 @@
+Jugador1: MATIAS, Jugador2: LUCAS, Resultado: MATIAS 06/10/2013 20:47.07
+Jugador1: CLAUDIO, Jugador2: LYDIA, Resultado: CLAUDIO 06/10/2013 20:47.49
+Jugador1: OMAR, Jugador2: LUCAS, Resultado: LUCAS 06/10/2013 20:49.24

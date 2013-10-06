@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#include <time.h>
 #define MAX_FILAS 3
 #define MAX_COLUMNAS 3
 #define MAX_JUGADAS 9
@@ -16,28 +17,28 @@ typedef struct {
 
 // Prototipos
 void inicializar_tateti(char tateti[][MAX_COLUMNAS],Jugador *oponente1,Jugador *oponente2);
-void inicializar_tablero(char tateti[][MAX_COLUMNAS]);
-void inicializar_jugador(Jugador *oponente);
 void imprimir_tateti(char tateti[][MAX_COLUMNAS]);
 int cargar_tateti(char casillero[],char tateti[][MAX_COLUMNAS],char ficha);
 void establecer_jugadores(Jugador *oponente1,Jugador *oponente2);
 void definir_nombre(Jugador *oponente,int orden);
 void definir_ficha(Jugador *oponente,int orden);
-int validar_nombre(Jugador *oponente1,Jugador *oponente2);
-int validar_ficha(Jugador *oponente1,Jugador *oponente2);
-void mayuscula(char string[]);
+int validar_nombre(char nombre1[],char nombre2[]);
+int validar_ficha(char ficha1,char ficha2);
 int validar_tateti_estandar(char tateti[][MAX_COLUMNAS],char ficha_jugador1, char ficha_jugador2);
 int quien_gano(char ficha, char ficha_jugador1, char ficha_jugador2);
-int realizar_jugada(Jugador *oponente,char tateti[][MAX_COLUMNAS]);
+int realizar_jugada(Jugador oponente,char tateti[][MAX_COLUMNAS]);
 void limpiar_nombre(Jugador *oponente);
 int predecir(char tateti[][MAX_COLUMNAS],char ficha,char ficha_jugador1, char ficha_jugador2);
+void guardar_historial(char jugador1[],char jugador2[],int estado);
 
 int main()
 {
     
     Jugador oponente1,oponente2;
-    int ocupados = 0, resultado = 0, jugadas = 0;
+    int resultado = 0, jugadas = 0;
     char tateti[MAX_FILAS][MAX_COLUMNAS];
+    
+    srand(time(0));
 
     inicializar_tateti(tateti,&oponente1,&oponente2);
 
@@ -53,19 +54,23 @@ int main()
     imprimir_tateti(tateti);
     printf("Comencemos...\n\n\n");
     
-    do{
-           resultado = realizar_jugada(&oponente1,tateti);
-           if(resultado<0)
-                continue;
+    while(jugadas<MAX_JUGADAS)
+	{
+		   resultado = -1;
+    	   do{
+			   resultado = realizar_jugada(oponente1,tateti);
+		   } while(resultado<0);
                                
            resultado = validar_tateti_estandar(tateti,oponente1.ficha,oponente2.ficha);
            switch(resultado)
            {
                 case 1:
                      printf("Ha ganado el Jugador %s\n\n\n",oponente1.nombre);
+                     guardar_historial(oponente1.nombre,oponente2.nombre,1);
                      break;
                 case 2:
                      printf("Ha ganado el Jugador %s\n\n\n",oponente2.nombre);
+                     guardar_historial(oponente1.nombre,oponente2.nombre,2);
                      break;
            }
            if(resultado == 1 || resultado == 2)
@@ -80,25 +85,35 @@ int main()
            {
                 printf("Empate!!!\n\n\n");
                 break;
-           }
+           } else {
+			   if(jugadas == MAX_JUGADAS-1)
+			   {
+			   		printf("Ha ganado el Jugador %s\n\n\n",oponente2.nombre);
+			   		guardar_historial(oponente1.nombre,oponente2.nombre,2);
+			   		break;
+			   }	
+		   }
                          
            jugadas++;
            
            if(jugadas == MAX_JUGADAS)
                 break;
                               
-           resultado = realizar_jugada(&oponente2,tateti);
-           if(resultado<0)
-                continue;
+           resultado = -1;
+    	   do{
+			   resultado = realizar_jugada(oponente2,tateti);
+		   } while(resultado<0);
                                        
            resultado = validar_tateti_estandar(tateti,oponente1.ficha,oponente2.ficha);
            switch(resultado)
            {
                 case 1:
                      printf("Ha ganado el Jugador %s\n\n\n",oponente1.nombre);
+                     guardar_historial(oponente1.nombre,oponente2.nombre,1);
                      break;
                 case 2:
                      printf("Ha ganado el Jugador %s\n\n\n",oponente2.nombre);
+                     guardar_historial(oponente1.nombre,oponente2.nombre,2);
                      break;
            }
            if(resultado == 1 || resultado == 2)
@@ -117,10 +132,17 @@ int main()
            if(resultado<0)
            {
                 printf("Empate!!!\n\n\n");
+                guardar_historial(oponente1.nombre,oponente2.nombre,0);
                 break;
-           }
-                                
-    } while(jugadas<MAX_JUGADAS);
+           } else {
+			   if(jugadas == MAX_JUGADAS-1)
+			   {
+			   		printf("Ha ganado el Jugador %s\n\n\n",oponente1.nombre);
+			   		guardar_historial(oponente1.nombre,oponente2.nombre,1);
+			   		break;
+			   }	
+		   }                                
+    }
     
     if(jugadas == MAX_JUGADAS)
     {
@@ -130,75 +152,85 @@ int main()
     return 0;
 }
 
-/*
- * Setea la Matriz
+/**
+ * Inicializa el tablero, y cada jugador (parámetros por referencia)
 */
 void inicializar_tateti(char tateti[][MAX_COLUMNAS],Jugador *oponente1,Jugador *oponente2)
-{
-     inicializar_tablero(tateti);
-     inicializar_jugador(&(*oponente1));
-     inicializar_jugador(&(*oponente2));    
-}
-void inicializar_tablero(char tateti[][MAX_COLUMNAS])
 {
      int i=0,j=0;
      for(i=0;i<MAX_FILAS;i++)
           for(j=0;j<MAX_COLUMNAS;j++)
                 tateti[i][j] = ' ';
+            
+     oponente1->ficha = '_';
+     oponente2->ficha = '_';
 }
-void inicializar_jugador(Jugador *oponente)
-{   
-    (*oponente).ficha = '_';
-}
-
+/**
+ * Solicita al usuario su nombre
+ * Parámetros:
+ * 1- struct Jugador (por referencia)
+ * 2- entero Orden del Jugador (Ej: Jugador 1)
+ */
 void definir_nombre(Jugador *oponente,int orden)
 {
      do{
        printf("\n\nIngrese el nombre del Jugador %d: ",orden);
        fflush(stdin);
-       fgets((*oponente).nombre,TAM_NOMBRE,stdin);
-       // gets((*oponente).nombre);
-       // scanf("%s",(*oponente).nombre);
-       if(strcmp((*oponente).nombre,"\n") == 0)
+       fgets(oponente->nombre,TAM_NOMBRE,stdin);
+       if(strcmp(oponente->nombre,"\n") == 0)
        {
-               system("CLS"); // clrscr();
+               system("CLS");
                printf("ERROR: No puede ingresar un nombre vacio...");                    
        }       
-    } while(strcmp((*oponente).nombre,"\n") == 0);
+    } while(strcmp(oponente->nombre,"\n") == 0);
+    
     limpiar_nombre(&(*oponente));
 }
-
+/**
+ * Elimina el último caracter ingresado (enter) y lo reemplaza por un espacio
+ * Esto se requiere ya que al momento de mostrar el nombre del jugador aparecia
+ * el mensaje debajo y esto lo corrige.
+ */
 void limpiar_nombre(Jugador *oponente)
 {
      int i=0;
      for(i=0;i<TAM_NOMBRE;i++){
-          if((*oponente).nombre[i] == '\n')
+          if(oponente->nombre[i] == '\n')
           {
-              (*oponente).nombre[i] = ' ';
+              oponente->nombre[i] = '\0';
           }
      }
 }
-
+/**
+ * Solicita al usuario que ingrese la ficha
+ * Parámetros:
+ * 1- struct Jugador (por referencia)
+ * 2- entero Orden del Jugador (Ej: Jugador 1)
+ */
 void definir_ficha(Jugador *oponente,int orden)
 {
      do{
        printf("\n\nIngrese el tipo de ficha para el Jugador %d: ",orden);
        fflush(stdin);
-       (*oponente).ficha = getchar();
-       // putchar((*oponente).ficha); // Muestra por pantalla el caracter
-       if((*oponente).ficha == '\n')
+       oponente->ficha = getchar();
+       if(oponente->ficha == '\n')
        {
-               system("CLS"); // clrscr();
+               system("CLS");
                printf("ERROR: No puede ingresar una ficha vacia...");                    
        }       
-    } while((*oponente).ficha == '\n');
+    } while(oponente->ficha == '\n');
 }
-
-int validar_nombre(Jugador *oponente1,Jugador *oponente2)
+/**
+ * Determina si el nombre ingresado no está en uso
+ * Devuelve 0 (cero) si no se repite o -1 en caso de repetirse.
+ */
+int validar_nombre(char nombre1[],char nombre2[])
 {
-     mayuscula((*oponente1).nombre);
-     mayuscula((*oponente2).nombre);
-     if(strcmp((*oponente1).nombre,(*oponente2).nombre)== 0)
+	// Pasa toda la cadena a mayúsculas
+     strupr(nombre1);
+     strupr(nombre2);
+     // compara dos cadenas (insensible a las mayúsculas y minúsculas)
+     if(strcasecmp(nombre1,nombre2) == 0)
      {
             system("CLS");
             printf("El nombre ingresado ya fue escogido\n\n");
@@ -206,9 +238,13 @@ int validar_nombre(Jugador *oponente1,Jugador *oponente2)
      }
      return 0;     
 }
-int validar_ficha(Jugador *oponente1,Jugador *oponente2)
+/**
+ * Valida que la ficha ingresada no este repetida
+ * Devuelve 0 en caso de exito o -1 si hubo un error
+ */
+int validar_ficha(char ficha1,char ficha2)
 {
-     if(toupper((*oponente1).ficha)==toupper((*oponente2).ficha))
+     if(toupper(ficha1)==toupper(ficha2))
       {
             system("CLS");
             printf("\nLa ficha ingresada ya fue escogida\n\n");
@@ -223,7 +259,7 @@ void establecer_jugadores(Jugador *oponente1,Jugador *oponente2)
 
     do{
          definir_nombre(&(*oponente1),1);
-         lbresp = validar_nombre(&(*oponente1),&(*oponente2));
+         lbresp = validar_nombre(oponente1->nombre,oponente2->nombre);
          if(lbresp < 0){
              continue;
          }
@@ -231,7 +267,7 @@ void establecer_jugadores(Jugador *oponente1,Jugador *oponente2)
     } while(lbresp < 0);
     do{    
          definir_ficha(&(*oponente1),1);
-         lbresp = validar_ficha(&(*oponente1),&(*oponente2));
+         lbresp = validar_ficha(oponente1->ficha,oponente2->ficha);
          if(lbresp < 0){
              continue;
          }
@@ -240,7 +276,7 @@ void establecer_jugadores(Jugador *oponente1,Jugador *oponente2)
     
     do{
          definir_nombre(&(*oponente2),2);
-         lbresp = validar_nombre(&(*oponente1),&(*oponente2));
+         lbresp = validar_nombre(oponente1->nombre,oponente2->nombre);
          if(lbresp < 0){
              continue;
          }
@@ -248,33 +284,45 @@ void establecer_jugadores(Jugador *oponente1,Jugador *oponente2)
     } while(lbresp < 0);
     do{
          definir_ficha(&(*oponente2),2);
-         lbresp = validar_ficha(&(*oponente1),&(*oponente2));
+         lbresp = validar_ficha(oponente1->ficha,oponente2->ficha);
          if(lbresp < 0){
              continue;
          }
          lbresp = 0;                  
     } while(lbresp < 0);
 }
-
-void mayuscula(char string[])
-{
-     int i=0;
-     char *p = string;
-     while (*p != '\0')
-    {
-        *p = toupper(*p);
-        p++;
-    }
-}
-
-int realizar_jugada(Jugador *oponente,char tateti[][MAX_COLUMNAS])
+/**
+ * Se le solicita al jugador que escoja una celda y se lo ingresa en el
+ * tablero. En caso de no haber problemas se vuelve a imprimir el tablero.
+ * Retorna 0 en caso de haberse realizado la jugada con exito o 
+ * -1 en caso de error.
+ */
+int realizar_jugada(Jugador oponente,char tateti[][MAX_COLUMNAS])
 {
     char casillero[CELDA];
     int resultado = 0;
-    printf("Jugador %s, ingrese la celda: ",(*oponente).nombre);  
+    char columna = 'a';
+    
+    switch(rand()%3)
+   {
+        case 0:
+             columna = 'a';
+             break;
+        case 1:
+             columna = 'b';
+             break;
+   		case 2:
+             columna = 'c';
+             break;
+	    default:
+ 		     columna = 'a';
+	    	 break;
+   }
+    printf("Jugador %s, ingrese la celda (Ej: %c%d): ",
+			oponente.nombre,columna,rand()%3+1);  
     fflush(stdin);
     fgets(casillero,CELDA,stdin);
-    resultado = cargar_tateti(casillero,tateti,(*oponente).ficha);
+    resultado = cargar_tateti(casillero,tateti,oponente.ficha);
     if(resultado <0){
         return -1;
     }
@@ -282,6 +330,12 @@ int realizar_jugada(Jugador *oponente,char tateti[][MAX_COLUMNAS])
     return 0;    
 }
 
+/** 
+ * Devuelve:
+ * 0: si se pudo grabar el dato y no hubo errores
+ * -1: Si se ingreso mal la fila o la columna
+ * -2: Si se escogio un casillero ocupado
+ */
 int cargar_tateti(char casillero[],char tateti[][MAX_COLUMNAS],char ficha)
 {
      int pos_fila=0,pos_col=0;
@@ -331,14 +385,14 @@ int cargar_tateti(char casillero[],char tateti[][MAX_COLUMNAS],char ficha)
      if(tateti[pos_fila][pos_col] != ' ')
      {
           printf("\n\nERROR: El Casillero no esta vacio. Intente con otro...\n\n");
-          return -2;                      
+          return -1;                      
      }
      tateti[pos_fila][pos_col] = ficha;
      
      return 0;
 }
 
-/*
+/**
  * Procedimiento para imprimir por pantalla el tablero de
  * Ta-Te-Ti
 */
@@ -365,8 +419,14 @@ void imprimir_tateti(char tateti[][MAX_COLUMNAS])
      printf("\n\n");
 
 }
-/*
- * Chequea si el simbolo ingresado corresponde
+/**
+ * Chequea el simbolo ingresado para compararlo entre los jugadores
+ * Si la ficha que tomo como primer parametro es igual a algun jugador
+ * devolvera un indicador:
+ * 1- Gano el primer jugador
+ * 2- Gano el segundo jugador
+ * 0- No corresponde a ningun jugador (en el caso de que hayan espacios
+ * por ejemplo, lo que segun este juego se considera ' ')
 */
 int quien_gano(char ficha, char ficha_jugador1, char ficha_jugador2)
 {
@@ -382,8 +442,8 @@ int quien_gano(char ficha, char ficha_jugador1, char ficha_jugador2)
 
      return 0;
 }
-/*
- * Función que devuelve 0 si no ha habido aún ganadores, o 1 si ganó el
+/**
+ * Función que devuelve 0 si no ha habido aun ganadores, o 1 si gano el
  * primer jugador o 2 si ganó el segundo jugador
 */
 int validar_tateti_estandar(char tateti[][MAX_COLUMNAS],char ficha_jugador1, char ficha_jugador2)
@@ -423,6 +483,7 @@ int validar_tateti_estandar(char tateti[][MAX_COLUMNAS],char ficha_jugador1, cha
     }
     return resultado;
 }
+
 int predecir(char tateti[][MAX_COLUMNAS],char ficha,char ficha_jugador1, char ficha_jugador2)
 {
     char temp[MAX_FILAS][MAX_COLUMNAS];
@@ -439,4 +500,63 @@ int predecir(char tateti[][MAX_COLUMNAS],char ficha,char ficha_jugador1, char fi
         return 0; // Hay posibilidades de ganar
     
     return -1; // No hay posibilidades de ganar
+}
+
+/**
+ * Graba en el documento historial_tateti.txt los resultados del juego.
+ * Por ultimo muestra todo el historial.
+ * 
+ * Parametros:
+ * 1- Nombre del jugador 1 (arreglo de caracteres)
+ * 2- Nombre del jugador 2 (arreglo de caracteres)
+ * 3- estado (entero):
+ * 		Si se pasa 0 guarda el resultado como empate,
+ * 		Si se pasa 1 guarda el resultado que gano el jugador1,
+ * 		Si se pasa 2 guarda el resultado que gano el jugador2.
+ */
+void guardar_historial(char jugador1[],char jugador2[],int estado)
+{
+	FILE *file;
+	char linea[100],*car;
+	char resultado[50];
+	time_t t;
+	struct tm *tm;
+	char fechayhora[100];
+	
+	t=time(NULL);
+	tm=localtime(&t);
+	strftime(fechayhora, 100, "%d/%m/%Y %H:%M.%S", tm);
+	
+	switch(estado)
+   {
+        case 1:
+             strcpy(resultado,"Ha ganado el Jugador ");
+             strcpy(resultado,jugador1);
+             break;
+   		case 2:
+             strcpy(resultado,"Ha ganado el Jugador ");
+             strcpy(resultado,jugador2);
+             break;
+	    default:
+ 		     strcpy(resultado,"Empate");
+	    	 break;
+   } 	 
+	
+	file = fopen("historial_tateti.txt", "a+");
+	fprintf(file,"Jugador1: %s, Jugador2: %s, Resultado: %s %s\n",
+		jugador1,jugador2,resultado,fechayhora);
+    fclose(file);
+	
+	file = fopen("historial_tateti.txt", "r");
+	
+	printf("Historial\n");
+	do {
+		car = fgets(linea,sizeof(linea),file);
+		if(car != NULL)
+			printf("%s",linea);
+		
+	} while(car != NULL);
+	
+	
+	fclose(file);
 }
