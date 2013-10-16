@@ -6,12 +6,13 @@ struct datos_persona {
 	int id;
 }; struct datos_persona legajo;
 
-// Prototipo
+// Prototipo de la funcion (esto se pedia en el pacial)
 void escribir_dato(struct datos_persona legajo);
 
 
 int main()
 {
+	// Y lo segundo que se pidio fue la invocacion
 	escribir_dato(legajo);
 	
 	printf("Presione una tecla para salir...");
