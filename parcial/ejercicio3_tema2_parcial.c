@@ -1,42 +1,32 @@
 #include <stdio.h>
 #include <conio.h>
 
-struct fecha {
-	int dia;
-	int mes;
-	int anio;
-}; struct fecha fecha;
+struct datos_persona {
+	char nombre[50];
+	int id;
+}; struct datos_persona legajo;
 
 // Prototipo
-void setFecha(struct fecha *fecha);
-void getFecha(struct fecha *fecha);
+void escribir_dato(struct datos_persona legajo);
 
 
 int main()
 {
-	
-	// No me acuerdo el nombre de la funcion, pero es de este estilo
-	setFecha(&fecha);
-	
-	getFecha(&fecha);
+	escribir_dato(legajo);
 	
 	printf("Presione una tecla para salir...");
 	getch();
 	return 0;
 }
 
-void setFecha(struct fecha *fecha)
+void escribir_dato(struct datos_persona legajo)
 {
-	printf("Ingrese el dia: ");
-	scanf("%d",&fecha->dia);
-	printf("Ingrese el mes: ");
-	scanf("%d",&fecha->mes);
-	printf("Ingrese el anio: ");
-	scanf("%d",&fecha->anio);
+	printf("Ingrese el nombre: ");
+	fflush(stdin);
+	scanf("%s",legajo.nombre);
+	printf("Ingrese el numero de legajo: ");
+	scanf("%d",&legajo.id);
+
+	printf("\nDatos: Nombre: %s, legajo: %d\n\n",legajo.nombre,legajo.id);
 }
 
-void getFecha(struct fecha *fecha)
-{
-	printf("La fecha ingresada es: %d/%d/%d\n",
-		fecha->dia,fecha->mes,fecha->anio);
-}
