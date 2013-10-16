@@ -1,3 +1,4 @@
-Jugador1: MATIAS, Jugador2: LUCAS, Resultado: MATIAS 06/10/2013 20:47.07
-Jugador1: CLAUDIO, Jugador2: LYDIA, Resultado: CLAUDIO 06/10/2013 20:47.49
-Jugador1: OMAR, Jugador2: LUCAS, Resultado: LUCAS 06/10/2013 20:49.24
+Jugador1: HF, Jugador2: FE, Resultado: Empate 08/10/2013 19:56.53 Tiempo de jugada 79 seg.
+Jugador1: A, Jugador2: B, Resultado: A 08/10/2013 19:57.50 Tiempo de jugada 13 seg.
+Jugador1: JUAN, Jugador2: PEDRO, Resultado: JUAN 08/10/2013 20:05.36 Tiempo de jugada 49 seg.
+Jugador1: JUAN, Jugador2: PEDRO, Resultado: PEDRO 08/10/2013 20:06.59 Tiempo de jugada 39 seg.
