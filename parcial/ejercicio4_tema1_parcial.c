@@ -33,6 +33,7 @@ int main()
 	else
 		printf("No se encontro el numero %d",buscar);
 	
+	free(lista);
 	printf("Presione una tecla para salir...");
 	getch();
 	return 0;	

@@ -32,6 +32,7 @@ int main()
 	else
 		printf("No se pudo reemplazar el dato\n\n");
 	
+	free(lista);
 	printf("Presione una tecla para salir...");
 	getch();
 	return 0;	
